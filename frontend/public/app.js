@@ -55,7 +55,17 @@
       textContent:'0:00', className:'time-badge' 
     });
     
-    individualControls.append(indPlayBtn, indPauseBtn, indCurTime, indSeek, indDurTime);
+    // Individual speed control for this video only
+    const indSpeedSelect = document.createElement('select');
+    indSpeedSelect.innerHTML = `
+      <option value="0.5">0.5x</option>
+      <option value="1" selected>1x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+      <option value="5">5x</option>
+    `;
+    
+    individualControls.append(indPlayBtn, indPauseBtn, indCurTime, indSeek, indDurTime, indSpeedSelect);
     
     pane.append(topbar, status, videoWrap, individualControls);
 
@@ -108,6 +118,12 @@
     indSeek.addEventListener('change', async ()=>{ 
       const t = Number(indSeek.value)||0; 
       await player.seekTo(t); 
+    });
+
+    // Individual speed control event handler (only affects this video)
+    indSpeedSelect.addEventListener('change', ()=>{
+      const rate = Number(indSpeedSelect.value);
+      player.setRate(rate);
     });
 
     // Update individual controls periodically for this video only
