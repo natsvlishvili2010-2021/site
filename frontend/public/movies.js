@@ -204,7 +204,8 @@
     const refreshBtn = Object.assign(document.createElement('button'), { textContent:'Refresh' });
     const hideBtn = Object.assign(document.createElement('button'), { textContent:'Hide' });
     const gadBtn = Object.assign(document.createElement('button'), { textContent:'GAD' });
-    small.append(refreshBtn, hideBtn, gadBtn);
+    const paneFullscreenBtn = Object.assign(document.createElement('button'), { textContent:'⛶', title:'Fullscreen this pane' });
+    small.append(refreshBtn, hideBtn, gadBtn, paneFullscreenBtn);
     websiteWrap.appendChild(small);
 
     const container = document.createElement('div');
@@ -280,6 +281,11 @@
       }
     });
 
+    // Pane fullscreen toggle functionality
+    paneFullscreenBtn.addEventListener('click', ()=>{
+      togglePaneFullscreen(pane, paneFullscreenBtn);
+    });
+
     // Individual control event handlers (only for this website)
     indPlayBtn.addEventListener('click', async ()=>{ 
       await website.controller.play(); 
@@ -350,6 +356,56 @@
 
   function setStatus(el, text){ el.textContent = text; }
   function hhmmss(sec){ if(!isFinite(sec)) return '0:00'; const s = Math.floor(sec%60).toString().padStart(2,'0'); const m = Math.floor(sec/60)%60; const h = Math.floor(sec/3600); return (h>0? h+':'+String(m).padStart(2,'0') : m)+':'+s; }
+
+  // Individual pane fullscreen functionality
+  function togglePaneFullscreen(pane, fullscreenBtn) {
+    const body = document.body;
+    const currentFullscreenPane = body.querySelector('.pane-fullscreen');
+    
+    if (currentFullscreenPane && currentFullscreenPane === pane) {
+      // Exit current pane fullscreen
+      exitPaneFullscreen();
+    } else if (currentFullscreenPane && currentFullscreenPane !== pane) {
+      // Switch to different pane fullscreen
+      exitPaneFullscreen();
+      enterPaneFullscreen(pane, fullscreenBtn);
+    } else {
+      // Enter pane fullscreen
+      enterPaneFullscreen(pane, fullscreenBtn);
+    }
+  }
+
+  function enterPaneFullscreen(pane, fullscreenBtn) {
+    const body = document.body;
+    pane.classList.add('pane-fullscreen');
+    body.classList.add('pane-fullscreen-mode');
+    fullscreenBtn.textContent = '✕';
+    fullscreenBtn.title = 'Exit fullscreen';
+  }
+
+  function exitPaneFullscreen() {
+    const body = document.body;
+    const currentFullscreenPane = body.querySelector('.pane-fullscreen');
+    
+    if (currentFullscreenPane) {
+      currentFullscreenPane.classList.remove('pane-fullscreen');
+      body.classList.remove('pane-fullscreen-mode');
+      
+      // Update the fullscreen button text
+      const fullscreenBtn = currentFullscreenPane.querySelector('button[title*="fullscreen"]');
+      if (fullscreenBtn) {
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.title = 'Fullscreen this pane';
+      }
+    }
+  }
+
+  // Listen for Escape key to exit pane fullscreen
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('pane-fullscreen-mode')) {
+      exitPaneFullscreen();
+    }
+  });
 
   function buildWebsitePlayer(mount, statusEl){
     let iframe = null;

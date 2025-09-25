@@ -68,6 +68,77 @@
     body:-webkit-full-screen .small-controls { display: none; }
     body:-webkit-full-screen .individual-controls { display: none; }
     body:-webkit-full-screen .pane .website-wrap { background: #fff; }
+    
+    /* Individual pane fullscreen mode */
+    body.pane-fullscreen-mode { background: #000; overflow: hidden; }
+    body.pane-fullscreen-mode header { display: none; }
+    body.pane-fullscreen-mode .grid .pane:not(.pane-fullscreen) { display: none; }
+    body.pane-fullscreen-mode .pane.pane-fullscreen { 
+      display: block !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      border: none;
+      border-radius: 0;
+      background: #000;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen .topbar { 
+      background: rgba(15, 22, 35, 0.9);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen:hover .topbar {
+      opacity: 1;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen .status { 
+      background: rgba(15, 22, 35, 0.9);
+      position: absolute;
+      top: 50px;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen:hover .status {
+      opacity: 1;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen .website-wrap { 
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen .individual-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen:hover .individual-controls {
+      opacity: 1;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen .small-controls {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    body.pane-fullscreen-mode .pane.pane-fullscreen:hover .small-controls {
+      opacity: 1;
+    }
+    
     .nav-link { color: var(--accent); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
     .nav-link:hover { background: rgba(62, 160, 255, 0.1); }
   </style>
