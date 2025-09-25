@@ -17,6 +17,14 @@
     button, input, select { background:#0e1520; color:var(--text); border:1px solid #203044; border-radius:6px; padding:8px 10px; }
     button { cursor:pointer; }
     button.primary { background:var(--accent); color:#00142a; border-color:#2a7bd9; }
+    /* Pretty long seek bar */
+    .time-badge { font-size:12px; color:#b8c6d8; padding:2px 6px; border:1px solid #203044; border-radius:6px; }
+    input[type=range].seek { -webkit-appearance:none; appearance:none; width:min(65vw, 900px); height:6px; background:#1a2433; border-radius:999px; outline:none; border:1px solid #203044; }
+    input[type=range].seek::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px; background:var(--accent); border-radius:50%; border:1px solid #2a7bd9; box-shadow:0 0 0 4px rgba(62,160,255,0.25); }
+    input[type=range].seek::-moz-range-thumb { width:14px; height:14px; background:var(--accent); border:none; border-radius:50%; }
+    input[type=range].seek::-webkit-slider-runnable-track { height:6px; background:linear-gradient(90deg, var(--accent) var(--seek-fill, 0%), #1a2433 var(--seek-fill, 0%)); border-radius:999px; }
+    input[type=range].seek::-moz-range-track { height:6px; background:#1a2433; border-radius:999px; }
+    @media (max-width: 800px) { input[type=range].seek { width: 92vw; } }
     .badge { font-size:11px; padding:2px 6px; border:1px solid #203044; border-radius:999px; color:#b7c6d6; }
     .warn { color:#ffaf45; }
     .grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px; padding:10px; height:calc(100vh - 70px); }
@@ -70,7 +78,23 @@
     <h1>Multi-View Website Sync</h1>
     <a href="/" class="nav-link">← Videos</a>
     <div id="controls">
-      <button id="refresh-all" class="primary">Refresh All</button>
+      <button id="play" class="primary">Play</button>
+      <button id="play-all">Play All</button>
+      <button id="pause">Pause</button>
+      <button id="stop">Stop</button>
+      <span id="curtime" class="time-badge">0:00</span>
+      <input id="seek" class="seek" type="range" min="0" max="100" step="0.01" value="0"/>
+      <span id="durtime" class="time-badge">0:00</span>
+      <label>Speed
+        <select id="rate">
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+          <option value="5">5x</option>
+        </select>
+      </label>
+      <button id="refresh-all">Refresh All</button>
       <button id="fullscreen" type="button">Fullscreen</button>
       <span id="status-indicator" class="badge">Ready</span>
     </div>
