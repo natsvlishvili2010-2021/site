@@ -24,6 +24,10 @@ def add_cors_headers(resp):
     resp.headers['Access-Control-Allow-Origin'] = '*'
     resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    # Add cache control to prevent caching issues in Replit environment
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
     return resp
 
 
@@ -179,5 +183,6 @@ async def _playwright_extract(page_url: str):
 
 
 if __name__ == "__main__":
-    # For local dev, enable debug reload
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    # For Replit environment: bind to 0.0.0.0:5000 for frontend access
+    # Since this Flask app serves both API and static files, it acts as the frontend server
+    app.run(host="0.0.0.0", port=5000, debug=True)
