@@ -34,6 +34,57 @@
     .small-controls { position:absolute; right:8px; top:8px; display:flex; gap:6px; z-index:2; }
     .badge { font-size:11px; padding:2px 6px; border:1px solid #203044; border-radius:999px; color:#b7c6d6; }
     .warn { color:#ffaf45; }
+    /* Individual controls styling */
+    .individual-controls { 
+      display: none; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 8px 12px; 
+      background: rgba(15, 22, 35, 0.9); 
+      border-top: 1px solid #1e2a3a; 
+      font-size: 12px;
+    }
+    .individual-controls button {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .individual-seek {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      background: #1a2433;
+      border-radius: 999px;
+      outline: none;
+      border: 1px solid #203044;
+      margin: 0 6px;
+    }
+    .individual-seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 1px solid #2a7bd9;
+    }
+    .individual-seek::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+    }
+    .individual-seek::-webkit-slider-runnable-track {
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent) var(--seek-fill, 0%), #1a2433 var(--seek-fill, 0%));
+      border-radius: 999px;
+    }
+    .individual-seek::-moz-range-track {
+      height: 4px;
+      background: #1a2433;
+      border-radius: 999px;
+    }
     /* Fullscreen mode styles - only videos visible */
     body:fullscreen { background: #000; }
     body:fullscreen header { display: none; }
@@ -42,6 +93,7 @@
     body:fullscreen .pane .topbar { display: none; }
     body:fullscreen .pane .status { display: none; }
     body:fullscreen .small-controls { display: none; }
+    body:fullscreen .individual-controls { display: none; }
     body:fullscreen .pane .video-wrap { background: #000; }
     /* Webkit fullscreen support */
     body:-webkit-full-screen { background: #000; }
@@ -51,6 +103,7 @@
     body:-webkit-full-screen .pane .topbar { display: none; }
     body:-webkit-full-screen .pane .status { display: none; }
     body:-webkit-full-screen .small-controls { display: none; }
+    body:-webkit-full-screen .individual-controls { display: none; }
     body:-webkit-full-screen .pane .video-wrap { background: #000; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>

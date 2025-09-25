@@ -25,7 +25,8 @@
     small.className = 'small-controls';
     const muteBtn = Object.assign(document.createElement('button'), { textContent:'Mute' });
     const hideBtn = Object.assign(document.createElement('button'), { textContent:'Hide' });
-    small.append(muteBtn, hideBtn);
+    const gadBtn = Object.assign(document.createElement('button'), { textContent:'GAD' });
+    small.append(muteBtn, hideBtn, gadBtn);
     videoWrap.appendChild(small);
 
     const container = document.createElement('div');
@@ -36,7 +37,27 @@
     container.style.bottom = '0';
     videoWrap.appendChild(container);
 
-    pane.append(topbar, status, videoWrap);
+    // Create individual controls container
+    const individualControls = document.createElement('div');
+    individualControls.className = 'individual-controls';
+    individualControls.style.display = 'none'; // Hidden by default
+    
+    // Individual control elements
+    const indPlayBtn = Object.assign(document.createElement('button'), { textContent:'Play' });
+    const indPauseBtn = Object.assign(document.createElement('button'), { textContent:'Pause' });
+    const indSeek = Object.assign(document.createElement('input'), { 
+      type:'range', min:'0', max:'100', step:'0.01', value:'0', className:'individual-seek'
+    });
+    const indCurTime = Object.assign(document.createElement('span'), { 
+      textContent:'0:00', className:'time-badge'
+    });
+    const indDurTime = Object.assign(document.createElement('span'), { 
+      textContent:'0:00', className:'time-badge' 
+    });
+    
+    individualControls.append(indPlayBtn, indPauseBtn, indCurTime, indSeek, indDurTime);
+    
+    pane.append(topbar, status, videoWrap, individualControls);
 
     const player = buildPlayer(container, status);
 
@@ -55,6 +76,58 @@
       if(container.style.display === 'none'){ container.style.display = ''; hideBtn.textContent = 'Hide'; }
       else { container.style.display = 'none'; hideBtn.textContent = 'Show'; }
     });
+
+    // GAD button to toggle individual controls
+    gadBtn.addEventListener('click', ()=>{
+      if(individualControls.style.display === 'none'){
+        individualControls.style.display = 'flex';
+        gadBtn.textContent = 'Hide Controls';
+      } else {
+        individualControls.style.display = 'none'; 
+        gadBtn.textContent = 'GAD';
+      }
+    });
+
+    // Individual control event handlers (only for this video)
+    indPlayBtn.addEventListener('click', async ()=>{ 
+      await player.play(); 
+    });
+    
+    indPauseBtn.addEventListener('click', ()=>{ 
+      player.pause(); 
+    });
+    
+    indSeek.addEventListener('input', ()=>{
+      const t = Number(indSeek.value)||0;
+      indCurTime.textContent = hhmmss(t);
+      const max = Number(indSeek.max)||1; 
+      const pct = Math.max(0, Math.min(100, (t/max)*100));
+      indSeek.style.setProperty('--seek-fill', pct+'%');
+    });
+    
+    indSeek.addEventListener('change', async ()=>{ 
+      const t = Number(indSeek.value)||0; 
+      await player.seekTo(t); 
+    });
+
+    // Update individual controls periodically for this video only
+    setInterval(()=>{
+      if(individualControls.style.display !== 'none' && player.isReady()){
+        const currentTime = player.getCurrentTime() || 0;
+        const duration = player.getDuration() || 0;
+        
+        if(duration > 0){
+          const newMax = Math.max(10, Math.ceil(duration));
+          indSeek.max = String(newMax);
+          indSeek.value = String(Math.min(duration, currentTime));
+          indCurTime.textContent = hhmmss(currentTime);
+          indDurTime.textContent = hhmmss(duration);
+          
+          const pct = Math.max(0, Math.min(100, (currentTime/duration)*100));
+          indSeek.style.setProperty('--seek-fill', pct+'%');
+        }
+      }
+    }, 1000);
 
     grid.appendChild(pane);
     return { pane, input, loadBtn, status, player };
