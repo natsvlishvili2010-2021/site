@@ -206,23 +206,30 @@
   const syncIndicator = document.getElementById('sync-indicator');
 
   // Fullscreen functionality
-  function toggleFullscreen(){
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      // Enter fullscreen
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen();
+  function toggleFullscreen(event){
+    event.preventDefault(); // Prevent any form submission or default button behavior
+    event.stopPropagation(); // Stop event bubbling
+    
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Enter fullscreen
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(console.error);
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else {
+          console.log('Fullscreen API not supported');
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(console.error);
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
       }
-      fullscreenBtn.textContent = 'Exit Fullscreen';
-    } else {
-      // Exit fullscreen
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      }
-      fullscreenBtn.textContent = 'Fullscreen';
+    } catch (error) {
+      console.error('Fullscreen error:', error);
     }
   }
 
