@@ -365,11 +365,12 @@
     syncIndicator.textContent = `Sync: drift ${drift.toFixed(2)}s`;
     syncIndicator.className = 'badge'+(drift>threshold? ' warn':'');
     const now = performance.now();
-    if(drift>threshold && now - lastCorrection > 1500){
-      // Only seek lagging players forward; avoid touching the leader to reduce stalls
-      panes.forEach(p=> { const t = p.player.getCurrentTime()||0; if((maxT - t) > threshold){ p.player.seekTo(maxT - 0.1); } });
-      lastCorrection = now;
-    }
+    // Disabled automatic sync correction to allow individual video seeking
+    // if(drift>threshold && now - lastCorrection > 1500){
+    //   // Only seek lagging players forward; avoid touching the leader to reduce stalls
+    //   panes.forEach(p=> { const t = p.player.getCurrentTime()||0; if((maxT - t) > threshold){ p.player.seekTo(maxT - 0.1); } });
+    //   lastCorrection = now;
+    // }
     const dur = state.masterDuration || 0; if(dur>0){ const val = Math.min(dur, maxT); seek.value = String(val); if(curtime){ curtime.textContent = hhmmss(val); } const pct = Math.max(0, Math.min(100, (val/dur)*100)); seek.style.setProperty('--seek-fill', pct+'%'); }
   }, 1000);
 })();
