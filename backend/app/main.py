@@ -39,6 +39,10 @@ def index():
 def index_html():
     return send_from_directory(str(PUBLIC_DIR), 'index.html')
 
+@app.route('/movies')
+def movies():
+    return send_from_directory(str(PUBLIC_DIR), 'movies.html')
+
 
 @app.route('/api/fetch', methods=['POST', 'OPTIONS'])
 def fetch():
