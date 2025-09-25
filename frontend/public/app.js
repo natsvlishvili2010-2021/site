@@ -202,6 +202,7 @@
   const volume = document.getElementById('volume');
   const muteAll = document.getElementById('mute');
   const resync = document.getElementById('resync');
+  const fullscreenBtn = document.getElementById('fullscreen');
   const syncIndicator = document.getElementById('sync-indicator');
 
   btnPlay.addEventListener('click', async ()=>{ const target = Number(seek.value)||0; await broadcastSeek(target); await broadcastPlay(); });
@@ -218,6 +219,36 @@
   });
   seek.addEventListener('change', async ()=>{ const t = Number(seek.value)||0; await broadcastSeek(t); });
   resync.addEventListener('click', async ()=>{ const t = state.lastKnownTime||0; await broadcastSeek(t); });
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+  // Fullscreen functionality
+  function toggleFullscreen(){
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      // Enter fullscreen
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+      fullscreenBtn.textContent = 'Exit Fullscreen';
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      fullscreenBtn.textContent = 'Fullscreen';
+    }
+  }
+
+  // Listen for fullscreen changes to update button text
+  document.addEventListener('fullscreenchange', ()=>{
+    fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
+  });
+  document.addEventListener('webkitfullscreenchange', ()=>{
+    fullscreenBtn.textContent = document.webkitFullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
+  });
 
   async function broadcastPlay(){ await Promise.all(panes.map(async p=> p.player.play())); }
   function broadcastPause(){ panes.forEach(p=> p.player.pause()); }
