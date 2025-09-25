@@ -20,19 +20,48 @@
       this.playbackRate = 1;
       this.scrollInterval = null;
       this.maxScroll = 0;
+      this.isSameOrigin = false;
+      this.isControlled = false;
+    }
+
+    checkOriginAccess() {
+      if (!this.iframe || !this.iframe.src) {
+        this.isSameOrigin = false;
+        this.isControlled = false;
+        return;
+      }
+
+      try {
+        // Try to access contentDocument to detect cross-origin restrictions
+        const doc = this.iframe.contentDocument;
+        if (doc) {
+          // Check if we can actually access properties
+          const testAccess = doc.documentElement;
+          this.isSameOrigin = true;
+          this.isControlled = true;
+        }
+      } catch(e) {
+        // Cross-origin or other restrictions
+        this.isSameOrigin = false;
+        this.isControlled = false;
+      }
     }
 
     async play() {
       if (this.isPlaying) return;
-      this.isPlaying = true;
       
-      if (this.iframe && this.iframe.contentDocument) {
-        this.updateMaxScroll();
-        this.startAutoScroll();
-        setStatus(this.statusEl, 'Playing...');
-      } else {
-        setStatus(this.statusEl, 'Cannot play - cross-origin restrictions');
+      // Check origin access first
+      this.checkOriginAccess();
+      
+      if (!this.isControlled) {
+        setStatus(this.statusEl, 'Manual only - cross-origin content. Click and scroll in pane.');
+        return;
       }
+      
+      this.isPlaying = true;
+      this.updateMaxScroll();
+      this.startAutoScroll();
+      setStatus(this.statusEl, 'Playing...');
     }
 
     pause() {
@@ -54,13 +83,15 @@
     seekTo(timePercent) {
       this.currentTime = (timePercent / 100) * this.duration;
       
-      if (this.iframe && this.iframe.contentDocument) {
+      // Only attempt to control if we have access
+      if (this.isControlled) {
         try {
           this.updateMaxScroll();
           const targetScroll = (timePercent / 100) * this.maxScroll;
           this.iframe.contentWindow.scrollTo(0, targetScroll);
         } catch(e) {
-          // Cross-origin restrictions - cannot scroll
+          // Access denied - mark as uncontrolled
+          this.isControlled = false;
         }
       }
     }
@@ -74,7 +105,7 @@
     }
 
     updateMaxScroll() {
-      if (this.iframe && this.iframe.contentDocument) {
+      if (this.isControlled) {
         try {
           const doc = this.iframe.contentDocument;
           this.maxScroll = Math.max(
@@ -83,7 +114,10 @@
           );
         } catch(e) {
           this.maxScroll = 1000; // Default fallback
+          this.isControlled = false;
         }
+      } else {
+        this.maxScroll = 1000; // Default for uncontrolled content
       }
     }
 
@@ -92,39 +126,44 @@
         clearInterval(this.scrollInterval);
       }
 
+      // Only start auto-scroll for controlled content
+      if (!this.isControlled) {
+        setStatus(this.statusEl, 'Manual scrolling - cross-origin content');
+        return;
+      }
+
       // Calculate scroll speed based on playback rate
       const baseScrollSpeed = 2; // pixels per interval
       const scrollSpeed = baseScrollSpeed * this.playbackRate;
       const intervalTime = 100; // 100ms intervals
 
       this.scrollInterval = setInterval(() => {
-        if (!this.isPlaying) return;
+        if (!this.isPlaying || !this.isControlled) return;
 
-        if (this.iframe && this.iframe.contentDocument) {
-          try {
-            const currentScroll = this.iframe.contentWindow.pageYOffset || 0;
-            const newScroll = currentScroll + scrollSpeed;
-            
-            this.updateMaxScroll();
-            
-            if (newScroll >= this.maxScroll) {
-              // Reached end, pause playback
-              this.pause();
-              this.currentTime = this.duration;
-              setStatus(this.statusEl, 'Playback complete');
-              return;
-            }
-
-            this.iframe.contentWindow.scrollTo(0, newScroll);
-            
-            // Update current time based on scroll position
-            this.currentTime = (newScroll / this.maxScroll) * this.duration;
-            
-          } catch(e) {
-            // Cross-origin restrictions
+        try {
+          const currentScroll = this.iframe.contentWindow.pageYOffset || 0;
+          const newScroll = currentScroll + scrollSpeed;
+          
+          this.updateMaxScroll();
+          
+          if (newScroll >= this.maxScroll) {
+            // Reached end, pause playback
             this.pause();
-            setStatus(this.statusEl, 'Cannot auto-scroll - cross-origin restrictions');
+            this.currentTime = this.duration;
+            setStatus(this.statusEl, 'Playback complete');
+            return;
           }
+
+          this.iframe.contentWindow.scrollTo(0, newScroll);
+          
+          // Update current time based on scroll position
+          this.currentTime = (newScroll / this.maxScroll) * this.duration;
+          
+        } catch(e) {
+          // Lost access - mark as uncontrolled
+          this.isControlled = false;
+          this.pause();
+          setStatus(this.statusEl, 'Lost control - content blocked access');
         }
       }, intervalTime);
     }
@@ -337,13 +376,17 @@
       frame.style.width = '100%'; 
       frame.style.height = '100%'; 
       frame.style.border = 'none';
-      frame.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation';
+      frame.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
       mount.appendChild(frame); 
       iframe = frame; 
       
       // Create controller after iframe is ready
       setTimeout(() => {
         controller = new PaneController(iframe, statusEl);
+        // Check origin access after a delay to allow iframe to load
+        setTimeout(() => {
+          controller.checkOriginAccess();
+        }, 500);
       }, 1000); // Wait for iframe to load
       
       return frame; 
@@ -363,7 +406,14 @@
             const onLoad = ()=>{
               frame.removeEventListener('load', onLoad);
               ready = true;
-              setStatus(statusEl, `Ready: ${url}`);
+              // Check origin access after loading
+              setTimeout(() => {
+                if (controller) {
+                  controller.checkOriginAccess();
+                  const accessText = controller.isControlled ? 'Ready (controlled)' : 'Ready (manual only)';
+                  setStatus(statusEl, `${accessText}: ${url}`);
+                }
+              }, 500);
               resolve();
             };
             
@@ -387,33 +437,53 @@
         if(iframe && currentUrl){ 
           iframe.src = iframe.src; // Force refresh
           setStatus(statusEl, `Refreshing: ${currentUrl}`);
+          // Re-check origin access after refresh
+          setTimeout(() => {
+            if (controller) {
+              controller.checkOriginAccess();
+              const accessText = controller.isControlled ? 'Ready (controlled)' : 'Ready (manual only)';
+              setStatus(statusEl, `${accessText}: ${currentUrl}`);
+            }
+          }, 1500);
         } 
       },
       
       goBack(){ 
-        if(iframe){ 
+        if(iframe && controller && controller.isControlled){ 
           try {
             iframe.contentWindow.history.back();
           } catch(e) {
             setStatus(statusEl, 'Cannot navigate back (cross-origin)');
           }
-        } 
+        } else {
+          setStatus(statusEl, 'Navigation blocked - cross-origin content');
+        }
       },
       
       goForward(){ 
-        if(iframe){ 
+        if(iframe && controller && controller.isControlled){ 
           try {
             iframe.contentWindow.history.forward();
           } catch(e) {
             setStatus(statusEl, 'Cannot navigate forward (cross-origin)');
           }
-        } 
+        } else {
+          setStatus(statusEl, 'Navigation blocked - cross-origin content');
+        }
       },
       
       goHome(){ 
         if(iframe && homeUrl){ 
           iframe.src = homeUrl;
           setStatus(statusEl, `Going home: ${homeUrl}`);
+          // Re-check origin access after navigation
+          setTimeout(() => {
+            if (controller) {
+              controller.checkOriginAccess();
+              const accessText = controller.isControlled ? 'Ready (controlled)' : 'Ready (manual only)';
+              setStatus(statusEl, `${accessText}: ${homeUrl}`);
+            }
+          }, 1500);
         } 
       },
       
