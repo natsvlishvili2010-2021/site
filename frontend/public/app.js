@@ -282,6 +282,7 @@
   }
 
   const btnPlay = document.getElementById('play');
+  const btnPlayAll = document.getElementById('play-all');
   const btnPause = document.getElementById('pause');
   const btnStop = document.getElementById('stop');
   const seek = document.getElementById('seek');
@@ -331,6 +332,7 @@
   });
 
   btnPlay.addEventListener('click', async ()=>{ const target = Number(seek.value)||0; await broadcastSeek(target); await broadcastPlay(); });
+  btnPlayAll.addEventListener('click', async ()=>{ await broadcastPlay(); });
   btnPause.addEventListener('click', ()=> broadcastPause());
   btnStop.addEventListener('click', async ()=>{ await broadcastPause(); await broadcastSeek(0); });
   rate.addEventListener('change', ()=> broadcastRate(Number(rate.value)));
