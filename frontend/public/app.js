@@ -205,22 +205,6 @@
   const fullscreenBtn = document.getElementById('fullscreen');
   const syncIndicator = document.getElementById('sync-indicator');
 
-  btnPlay.addEventListener('click', async ()=>{ const target = Number(seek.value)||0; await broadcastSeek(target); await broadcastPlay(); });
-  btnPause.addEventListener('click', ()=> broadcastPause());
-  btnStop.addEventListener('click', async ()=>{ await broadcastPause(); await broadcastSeek(0); });
-  rate.addEventListener('change', ()=> broadcastRate(Number(rate.value)));
-  volume.addEventListener('input', ()=> broadcastVolume(Number(volume.value)));
-  muteAll.addEventListener('click', ()=>{ state.mutedAll = !state.mutedAll; broadcastMute(state.mutedAll); muteAll.textContent = state.mutedAll? 'Unmute All' : 'Mute All'; });
-  seek.addEventListener('input', ()=>{
-    const t = Number(seek.value)||0;
-    curtime.textContent = hhmmss(t);
-    const max = Number(seek.max)||1; const pct = Math.max(0, Math.min(100, (t/max)*100));
-    seek.style.setProperty('--seek-fill', pct+'%');
-  });
-  seek.addEventListener('change', async ()=>{ const t = Number(seek.value)||0; await broadcastSeek(t); });
-  resync.addEventListener('click', async ()=>{ const t = state.lastKnownTime||0; await broadcastSeek(t); });
-  fullscreenBtn.addEventListener('click', toggleFullscreen);
-
   // Fullscreen functionality
   function toggleFullscreen(){
     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -249,6 +233,22 @@
   document.addEventListener('webkitfullscreenchange', ()=>{
     fullscreenBtn.textContent = document.webkitFullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
   });
+
+  btnPlay.addEventListener('click', async ()=>{ const target = Number(seek.value)||0; await broadcastSeek(target); await broadcastPlay(); });
+  btnPause.addEventListener('click', ()=> broadcastPause());
+  btnStop.addEventListener('click', async ()=>{ await broadcastPause(); await broadcastSeek(0); });
+  rate.addEventListener('change', ()=> broadcastRate(Number(rate.value)));
+  volume.addEventListener('input', ()=> broadcastVolume(Number(volume.value)));
+  muteAll.addEventListener('click', ()=>{ state.mutedAll = !state.mutedAll; broadcastMute(state.mutedAll); muteAll.textContent = state.mutedAll? 'Unmute All' : 'Mute All'; });
+  seek.addEventListener('input', ()=>{
+    const t = Number(seek.value)||0;
+    curtime.textContent = hhmmss(t);
+    const max = Number(seek.max)||1; const pct = Math.max(0, Math.min(100, (t/max)*100));
+    seek.style.setProperty('--seek-fill', pct+'%');
+  });
+  seek.addEventListener('change', async ()=>{ const t = Number(seek.value)||0; await broadcastSeek(t); });
+  resync.addEventListener('click', async ()=>{ const t = state.lastKnownTime||0; await broadcastSeek(t); });
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
 
   async function broadcastPlay(){ await Promise.all(panes.map(async p=> p.player.play())); }
   function broadcastPause(){ panes.forEach(p=> p.player.pause()); }
